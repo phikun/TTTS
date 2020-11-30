@@ -225,7 +225,7 @@ double calculate_school_travel_time(const point &p) {
 		res = min(res, time);
 
 		// 若垂点不在弧段上，直接跳过
-		/* const auto theta012 = sphere_angle(p, p1, p2);
+		const auto theta012 = sphere_angle(p, p1, p2);
 		const auto theta021 = sphere_angle(p, p2, p1);
 		if (sgn(theta012 - PI / 2.0) >= 0 || sgn(theta021 - PI / 2.0) >= 0)
 			continue;
@@ -246,7 +246,7 @@ double calculate_school_travel_time(const point &p) {
 		time = distps / wspeed + distv1 / speed[idx] + vertexTime[segs[idx]];
 		res = min(res, time);
 		time = distps / wspeed + distv2 / speed[idx] + vertexTime[sege[idx]];
-		res = min(res, time); */
+		res = min(res, time);
 	}
 
 	return res;
