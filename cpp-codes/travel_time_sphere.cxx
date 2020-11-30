@@ -56,13 +56,13 @@
 
 #include <cmath>
 #include <utility>
+#include <fstream>
+#include <iomanip>
 #include <unordered_map>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/segment.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/foreach.hpp>
 
@@ -187,7 +187,8 @@ llf sphere_angle(const point& A, const point& O, const point& B)
 
 // 给定一点，求该点上学的最短时间
 // 2020.11.28更新：直接用地理坐标系求
-double calculate_school_travel_time(const point &p) {	
+double calculate_school_travel_time(const point &p, ofstream& fout) 
+{	
 	// Step1: 找一个最近点
 	vector<pvalue> nps;
 	prtree.query(bgi::nearest(p, 1), back_inserter(nps));
@@ -241,6 +242,12 @@ double calculate_school_travel_time(const point &p) {
 		bg::strategy::line_interpolate::geographic<bg::strategy::vincenty> str(spheroid);
 		bg::line_interpolate(segment(p1, p2), interp_length, vp, str);  // 按距离插值得到垂点
 
+		// 在sphere-vert-check分支中新加的，输出顶点经纬度和垂点经纬度，检查【垂点】是否垂直
+		fout << fixed << setprecision(6) << p.get<0>() << " "
+		     << fixed << setprecision(6) << p.get<1>() << " " 
+			 << fixed << setprecision(6) << vp.get<0>() << " " 
+			 << fixed << setprecision(6) << vp.get<1>() << endl;
+
 		const double distv1 = bg::distance(vp, p1);
 		const double distv2 = bg::distance(vp, p2);
 		time = distps / wspeed + distv1 / speed[idx] + vertexTime[segs[idx]];
@@ -257,22 +264,28 @@ double calculate_school_travel_time(const point &p) {
 // 2020.11.10更新：修改了输入输出形式: int n_center_points -> 待求栅格中心点的数量
 //                                      double *coords -> 按[(lng, lat)]组织的栅格中心点经纬度数组，块长为2
 // 【行列号在Python里面弄，不传到C++里】
+// 在sphere-vert-check分支中新加了输出垂点的操作
 double* solve(int n_center_points, double *coords)
 {
     const int block_size = 2;
 	double *res = new double[n_center_points];
 
-#   pragma omp parallel for
-	for (auto i = 0; i < n_center_points; ++i)
+	ofstream fout;
+	fout.open("./vert-point.txt", ios::out);
+
+// #   pragma omp parallel for
+	for (auto i = 0; i < 1000; ++i)
 	{
         auto offset = i * block_size;
 		double x = coords[offset];
 		double y = coords[offset + 1];
 
 		auto pnt = point(x, y);
-		auto dist = calculate_school_travel_time(pnt);
+		auto dist = calculate_school_travel_time(pnt, fout);
 		res[i] = dist;
 	}
+
+	fout.close();
 
 	return res;
 }

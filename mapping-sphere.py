@@ -36,7 +36,7 @@ cll3 = ctypes.cdll.LoadLibrary("./travel_time_sphere.so")
 road_prefix, road_suffix = "./data/roads/", "道路-WGS84-Speed.shp"
 school_prefix, school_suffix = "./data/schools/primary/", "小学-WGS84.shp"
 raster_prefix, raster_suffix = "./data/population/", "人口-Clip.tif"
-output_prefix, output_suffix = "./results/小学/", "-小学-Full-Sphere-Box100-Dist.tif"
+output_prefix, output_suffix = "./results/小学/", "-小学-Full-Sphere-Box100-Dist-VertPoint.tif"
 input_file = "./data/input.xlsx"
 
 maxn = 6E6  # C++程序中数组大小，若点数太多需要修改C++程序重新编译
