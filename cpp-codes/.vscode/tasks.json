@@ -1,0 +1,25 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-std=c++14",
+                "-fopenmp",
+                "-o",
+                "travel_time_sphere.so",
+                "-shared",
+                "-fPIC",
+                "-I/data/ck/boost_1_74_0/",
+                "./travel_time_sphere.cxx"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

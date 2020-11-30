@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "includePath": "/data/ck/boost_1_74_0/",
+        "cmath": "cpp",
+        "sstream": "cpp"
+    }
+}
