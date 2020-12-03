@@ -23,5 +23,8 @@
     <ClInclude Include="utility.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="edge.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

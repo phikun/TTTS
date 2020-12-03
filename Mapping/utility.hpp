@@ -12,10 +12,13 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 #include <utility>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <ogrsf_frmts.h>
+
+#include "edge.hpp"
 
 namespace ttts
 {
@@ -30,8 +33,6 @@ namespace ttts
 		
 		const auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpenEx(fname.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
 		const auto pLayer = pDataSet->GetLayer(0);
-
-		const auto name = pLayer->GetName();
 
 		// 循环每一个Feature
 		pLayer->ResetReading();
@@ -79,12 +80,98 @@ namespace ttts
 			pFeature = pLayer->GetNextFeature();
 		}
 
-		std::cout << "Size = " << set.size() << std::endl;
+		auto idx = 1;
+		for (const auto& point : set)
+		{
+			index2vertex->insert(std::make_pair(idx, point));
+			vertex2index->insert(std::make_pair(point, idx));
+			++idx;
+		}
 		
 		auto *res = new std::pair<boost::unordered_map<int, std::pair<double, double> >*, boost::unordered_map<std::pair<double, double>, int>* >();
 		res->first = index2vertex;
 		res->second = vertex2index;
 		
+		return res;
+	}
+
+	/// <summary>
+	///		给定一个OGRLineString，查询顶点表更新弧段
+	///		build_edge_table的辅助函数
+	/// </summary>
+	inline void update_edge_list(OGRLineString* pLineString, boost::unordered_map<std::pair<double, double>, int>* vertex2index, std::list<model::edge>* edge_list, double speed)
+	{
+		auto n_points = pLineString->getNumPoints();
+		auto p1 = new OGRPoint(), p2 = new OGRPoint();
+		
+		for (auto j = 1; j < n_points; ++j)
+		{
+			pLineString->getPoint(j - 1, p1);
+			pLineString->getPoint(j, p2);
+			if (p1 == p2)
+				continue;
+			
+			const auto x1 = p1->getX(), y1 = p1->getY();
+			const auto x2 = p2->getX(), y2 = p2->getY();
+			edge_list->emplace_back((*vertex2index)[std::make_pair(x1, y1)], (*vertex2index)[std::make_pair(x2, y2)], speed);
+		}
+	}
+
+	/// <summary>
+	///		输入路网的shapefile，并指定道路速度所在的列，构造边表
+	///		【此版先完成允许重边的，之后直接对始终点id见索引，再扫描一次shapefile构造没有重边的边表！】
+	/// </summary>
+	inline std::pair<boost::unordered_map<int, model::edge>*, boost::unordered_map<std::pair<int, int>, int>* >* build_edge_table(std::string fname, std::string speed_field_name, boost::unordered_map<std::pair<double, double>, int>* vertex2index)
+	{
+		auto index2edge = new boost::unordered_map<int, model::edge>();
+		auto edge2index = new boost::unordered_map<std::pair<int, int>, int>();
+		auto edge_list = new std::list<model::edge>();
+
+		const auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpenEx(fname.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+		const auto pLayer = pDataSet->GetLayer(0);
+
+		// 循环每一个Feature
+		pLayer->ResetReading();
+		auto pFeature = pLayer->GetNextFeature();
+
+		while (pFeature != nullptr)
+		{
+			const auto pGeometryRef = pFeature->GetGeometryRef();
+			const auto pGeometryType = pGeometryRef->getGeometryType();
+			const auto speed = pFeature->GetFieldAsDouble(speed_field_name.c_str());
+
+			if (pGeometryType == wkbLineString)
+			{
+				const auto pLineString = dynamic_cast<OGRLineString*>(pGeometryRef->clone());
+				update_edge_list(pLineString, vertex2index, edge_list, speed);
+			}
+
+			if (pGeometryType == wkbMultiLineString)
+			{
+				const auto pMultiLineString = dynamic_cast<OGRMultiLineString*>(pGeometryRef->clone());
+				const auto n_lines = pMultiLineString->getNumGeometries();
+
+				for (auto i = 0; i < n_lines; ++i)
+				{
+					const auto pLineString = dynamic_cast<OGRLineString*>(pMultiLineString->getGeometryRef(i));
+					update_edge_list(pLineString, vertex2index, edge_list, speed);
+				}
+			}
+
+			pFeature = pLayer->GetNextFeature();
+		}
+
+		auto idx = 1;
+		for (const auto& edge : *edge_list)
+		{
+			index2edge->insert(std::make_pair(idx, edge));
+			edge2index->insert(std::make_pair(std::make_pair(edge.from_node, edge.to_node), idx));
+			++idx;
+		}
+		
+		auto res = new std::pair<boost::unordered_map<int, model::edge>*, boost::unordered_map<std::pair<int, int>, int>* >();
+		res->first = index2edge;
+		res->second = edge2index;
 		return res;
 	}
 }
