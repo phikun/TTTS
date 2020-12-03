@@ -129,4 +129,5 @@ f:\gdal\include\ogrsf_frmts.h(81): warning C4251: “OGRLayer::FeatureIterator::
           [
               _Ty=OGRLayer::FeatureIterator::Private
           ]
+    正在创建库 G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.lib 和对象 G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.exp
   Mapping.vcxproj -> G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.exe

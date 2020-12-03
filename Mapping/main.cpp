@@ -26,6 +26,9 @@ int main()
 	
 	cout << "Hello World!" << endl;
 
+	delete res->first;
+	delete res->second;
+	
 	system("PAUSE");
 	return 0;
 }
