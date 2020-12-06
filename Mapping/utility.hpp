@@ -2,7 +2,8 @@
  * 上学时间制图（C++版本）：常用函数，防止单个文件过大
  * 此文件包括的函数有：
  *   1. 根据路网shapefile构建顶点表
- *   2. 【其他一会再说】
+ *   2. 根据路网shapefile构造边表【此版允许重边，之后扫描3次路网shapefile保留重边的最大速度】
+ *   3. 根据学校shapefile构造学校点列表
  *
  * Author: Chen Kuo (201711051122@mail.bnu.edu.cn)
  * Date: 2020.12.03
@@ -16,12 +17,17 @@
 #include <utility>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
 #include <ogrsf_frmts.h>
 
 #include "edge.hpp"
 
 namespace ttts
 {
+	typedef boost::geometry::model::point<double, 2, boost::geometry::cs::geographic<boost::geometry::degree> > point_g;  // 地理坐标的点
+	typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_p;  // 投影坐标的点
+	
 	/// <summary>
 	///		输入路网的shapefile，构建顶点表
 	/// </summary>
@@ -173,5 +179,42 @@ namespace ttts
 		res->first = index2edge;
 		res->second = edge2index;
 		return res;
+	}
+
+	/// <summary>
+	///		从shapefile文件中读入学校点，返回指向学校点vector的指针
+	///		需要事先声明指针学校点是地理坐标系或投影坐标系，并从返回值类型推断出T的类型
+	/// </summary>
+	template<typename T>
+	std::vector<T>* read_school_points(std::string school_file)
+	{
+		const auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpenEx(school_file.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+		const auto pLayer = pDataSet->GetLayer(0);
+		const auto n_schools = static_cast<int>(pLayer->GetFeatureCount());
+		auto schools = new std::vector<T>(n_schools);
+		
+		// 循环每一个Feature
+		pLayer->ResetReading();
+		auto pFeature = pLayer->GetNextFeature();
+		auto ptr = 0;
+
+		while (pFeature != nullptr)
+		{
+			const auto pGeometryRef = pFeature->GetGeometryRef();
+			const auto pGeometryType = pGeometryRef->getGeometryType();
+
+			if (pGeometryType != wkbPoint)  // 学校点应该只可能是Point类型的
+				continue;
+
+			const auto pPoint = dynamic_cast<OGRPoint*>(pGeometryRef->clone());
+			const auto x = pPoint->getX();
+			const auto y = pPoint->getY();
+			const auto pnt = T(x, y);
+			(*schools)[ptr++] = pnt;
+			
+			pFeature = pLayer->GetNextFeature();
+		}
+
+		return schools;
 	}
 }
