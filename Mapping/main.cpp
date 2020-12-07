@@ -11,7 +11,10 @@
 #include <vector>
 #include <ctime>
 #include <gdal_priv.h>
+
 #include "utility.hpp"
+#include "index.hpp"
+#include "insert_school.hpp"
 
 using namespace std;
 
@@ -38,10 +41,14 @@ int main()
 	auto index2edge = pair2->first;
 	auto edge2index = pair2->second;
 
-	// 获取学校点
-	const auto schools = ttts::read_school_points<ttts::point_g>(school_file);  // 这个输入数据中的学校点是地理坐标
+	auto start_time = clock();
+	
+	// 测试一下插入学校点
+	ttts::strategy::insert_school::solve<ttts::point_g>(school_file, index2edge, index2vertex);
+	auto end_time = clock();
 
-	delete schools;
+	cout << "Index Time: " << end_time - start_time << endl;
+	
 	delete edge2index, index2edge;
 	delete index2vertex, vertex2index;
 	delete pair2, pair1;

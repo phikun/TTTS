@@ -217,4 +217,32 @@ namespace ttts
 
 		return schools;
 	}
+
+	/// <summary>
+	///		构造id到boost::geometry::model::segment的索引，用于建立空间索引
+	///		【实际上build_edge_table】时可直接返回这种索引
+	/// </summary>
+	template<typename TPoint>
+	boost::unordered_map<int, boost::geometry::model::segment<TPoint> >* build_index_to_geometry_edge(boost::unordered_map<int, model::edge>* index2edge, boost::unordered_map<int, std::pair<double, double> >* index2vertex)
+	{
+		auto res = new boost::unordered_map<int, boost::geometry::model::segment<TPoint> >();
+
+		for (const auto& pair : *index2edge)
+		{
+			const auto index = pair.first;
+			const auto edge_ = pair.second;
+
+			const auto p1x = (*index2vertex)[edge_.from_node].first;
+			const auto p1y = (*index2vertex)[edge_.from_node].second;
+			const auto p2x = (*index2vertex)[edge_.to_node].first;
+			const auto p2y = (*index2vertex)[edge_.to_node].second;
+			const auto p1 = TPoint(p1x, p1y);
+			const auto p2 = TPoint(p2x, p2y);
+			
+			auto seg = boost::geometry::model::segment<TPoint>(p1, p2);
+			res->insert(std::make_pair(index, seg));
+		}
+		
+		return res;
+	}
 }
