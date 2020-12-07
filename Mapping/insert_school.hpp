@@ -116,7 +116,9 @@ namespace ttts { namespace strategy
 			return res;
 		}
 		
-		// 插入学校函数，各种此步操作在该函数中汇总
+		/// <summary>
+		///		插入学校函数，各种此步操作在该函数中汇总
+		/// </summary>
 		template <typename TPoint, typename TStar = boost::geometry::index::rstar<16, 4> >
 		std::vector<int>* solve(const std::string& school_file, boost::unordered_map<int, model::edge>* index2edge, boost::unordered_map<std::pair<int, int>, int>* edge2index, boost::unordered_map<int, std::pair<double, double> >* index2vertex, boost::unordered_map<std::pair<double, double>, int>* vertex2index)
 		{

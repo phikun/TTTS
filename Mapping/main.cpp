@@ -16,6 +16,7 @@
 #include "utility.hpp"
 #include "index.hpp"
 #include "insert_school.hpp"
+#include "dijkstra.hpp"
 
 using namespace std;
 
@@ -44,10 +45,18 @@ int main()
 	
 	// 插入学校点，此函数会修改点表边表的4个索引，【学校点的ID号可能有问题，出现奇怪结果后再去检查！】
 	// 【edge2index那里有重边，先不管它，最后扫描3次路网文件消除重边】
+	const auto insert_school_start_time = clock();
 	const auto school_vertex_index = ttts::strategy::insert_school::solve<ttts::model::point_g>(school_file, index2edge, edge2index, index2vertex, vertex2index);
-
-	// 然后是Dijkstra
+	const auto insert_school_end_time = clock();
+	cout << "Insert School Time: " << fixed << setprecision(3) << (insert_school_end_time - insert_school_start_time) / 1000.0 << endl;
 	
+	// Dijkstra
+	const auto dijkstra_start_time = clock();
+	const auto vertex_time = ttts::strategy::dijkstra::solve<ttts::model::point_g>(index2vertex, index2edge, school_vertex_index);
+	const auto dijkstra_end_time = clock();
+	cout << "Dijkstra Time: " << fixed << setprecision(3) << (dijkstra_end_time - dijkstra_start_time) / 1000.0 << endl;
+	
+	delete vertex_time;
 	delete school_vertex_index;
 	delete edge2index, index2edge;
 	delete index2vertex, vertex2index;

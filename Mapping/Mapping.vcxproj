@@ -124,6 +124,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dijkstra.hpp" />
     <ClInclude Include="model.hpp" />
     <ClInclude Include="index.hpp" />
     <ClInclude Include="insert_school.hpp" />
