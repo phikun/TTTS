@@ -33,23 +33,22 @@ int main()
 	cout << "Hello World!" << endl;
 	
 	// 构建顶点表
-	auto pair1 = ttts::build_vertex_table(roadFile);
-	auto index2vertex = pair1->first;
-	auto vertex2index = pair1->second;
+	const auto pair1 = ttts::build_vertex_table(roadFile);
+	const auto index2vertex = pair1->first;
+	const auto vertex2index = pair1->second;
 
 	// 构建边表
-	auto pair2 = ttts::build_edge_table(roadFile, speed_field_name, vertex2index);
-	auto index2edge = pair2->first;
-	auto edge2index = pair2->second;
-
-	auto start_time = clock();
+	const auto pair2 = ttts::build_edge_table(roadFile, speed_field_name, vertex2index);
+	const auto index2edge = pair2->first;
+	const auto edge2index = pair2->second;
 	
-	// 测试一下插入学校点
-	ttts::strategy::insert_school::solve<ttts::model::point_g>(school_file, index2edge, index2vertex);
-	auto end_time = clock();
+	// 插入学校点，此函数会修改点表边表的4个索引，【学校点的ID号可能有问题，出现奇怪结果后再去检查！】
+	// 【edge2index那里有重边，先不管它，最后扫描3次路网文件消除重边】
+	const auto school_vertex_index = ttts::strategy::insert_school::solve<ttts::model::point_g>(school_file, index2edge, edge2index, index2vertex, vertex2index);
 
-	cout << "Index Time: " << end_time - start_time << endl;
+	// 然后是Dijkstra
 	
+	delete school_vertex_index;
 	delete edge2index, index2edge;
 	delete index2vertex, vertex2index;
 	delete pair2, pair1;

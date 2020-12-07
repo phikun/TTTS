@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <fstream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <boost/unordered_map.hpp>
@@ -28,8 +30,8 @@ namespace ttts { namespace strategy
 		template <typename TPoint, typename TStar>
 		std::vector<int>* find_nearest_segment(std::vector<TPoint>* school_points, boost::geometry::index::rtree<std::pair<boost::geometry::model::segment<TPoint>, int>, TStar>* rtree)
 		{
-			const auto n_schools = school_points->size();
-			auto res = new std::vector<int>(n_schools);
+			const auto n_schools = static_cast<int>(school_points->size());
+			const auto res = new std::vector<int>(n_schools);
 
 #			pragma omp parallel for
 			for (auto i = 0; i < n_schools; ++i)
@@ -41,10 +43,10 @@ namespace ttts { namespace strategy
 				const auto nearest_idx = query_result[0].second;
 				(*res)[i] = nearest_idx;
 			}
-			
+
 			return res;
 		}
-
+		
 		/// <summary>
 		///		根据学校坐标和最近线段ID号循环调用ttts::strategy中的寻找最近点函数，
 		///		获取到每个学校最临近的道路点坐标
@@ -66,10 +68,57 @@ namespace ttts { namespace strategy
 
 			return res;
 		}
+
+		/// <summary>
+		///		将学校插到道路上，更新道路和结点的索引
+		/// </summary>
+		template <typename TPoint>
+		std::vector<int>* update_indexes(std::vector<int>* nearest_segment_idx, std::vector<TPoint>* nearest_points, boost::unordered_map<int, model::edge>* index2edge, boost::unordered_map<std::pair<int, int>, int>* edge2index, boost::unordered_map<int, std::pair<double, double> >* index2vertex, boost::unordered_map<std::pair<double, double>, int>* vertex2index)
+		{
+			const auto res = new std::vector<int>(nearest_points->size());
+
+			auto vertex_index = static_cast<int>(index2vertex->size()) + 1;  // 首个学校点的ID号是目前index2vertex中最大ID号+1
+			auto edge_index = static_cast<int>(index2edge->size()) + 1;  // 首个道路点的ID号是目前index2vertex中最大ID号+1
+
+			for (auto i = 0; i < static_cast<int>(nearest_points->size()); ++i)
+			{
+				const auto& vp = (*nearest_points)[i];
+				const auto& x = vp.get<0>();
+				const auto& y = vp.get<1>();
+				
+				const auto coordinate_pair = std::make_pair(x, y);
+				const auto find_vertex = vertex2index->find(coordinate_pair);
+				
+				if (find_vertex != vertex2index->end())  // 如果最近点在道路结点中，直接返回道路结点ID
+				{
+					(*res)[i] = find_vertex->second;
+					continue;
+				}
+
+				// 如果最近点不在道路结点中，加点加边
+				index2vertex->insert(std::make_pair(vertex_index, coordinate_pair));
+				vertex2index->insert(std::make_pair(coordinate_pair, vertex_index));
+
+				const auto& vp_idx = (*nearest_segment_idx)[i];
+				const auto& from_node_idx = (*index2edge)[vp_idx].from_node;
+				const auto& to_node_idx = (*index2edge)[vp_idx].to_node;
+				const auto& speed = (*index2edge)[vp_idx].speed;
+				index2edge->insert(std::make_pair(edge_index, model::edge(vertex_index, from_node_idx, speed)));
+				edge2index->insert(std::make_pair(std::make_pair(vertex_index, from_node_idx), edge_index));
+				++edge_index;
+				index2edge->insert(std::make_pair(edge_index, model::edge(vertex_index, to_node_idx, speed)));
+				edge2index->insert(std::make_pair(std::make_pair(vertex_index, to_node_idx), edge_index));
+				++edge_index;
+				
+				(*res)[i] = vertex_index++;  // 指定当前点的ID是学校，此后点的ID更新
+			}
+			
+			return res;
+		}
 		
 		// 插入学校函数，各种此步操作在该函数中汇总
 		template <typename TPoint, typename TStar = boost::geometry::index::rstar<16, 4> >
-		void solve(const std::string& school_file, boost::unordered_map<int, model::edge>* index2edge, boost::unordered_map<int, std::pair<double, double> >* index2vertex)
+		std::vector<int>* solve(const std::string& school_file, boost::unordered_map<int, model::edge>* index2edge, boost::unordered_map<std::pair<int, int>, int>* edge2index, boost::unordered_map<int, std::pair<double, double> >* index2vertex, boost::unordered_map<std::pair<double, double>, int>* vertex2index)
 		{
 			// 1. 读取学校shapefile，获取学校点
 			const auto school_points = read_school_points<TPoint>(school_file);
@@ -83,14 +132,17 @@ namespace ttts { namespace strategy
 			
 			// 4. 学校点到道路的最近点
 			const auto nearest_points = find_nearest_points(school_points, index2geometry_segment, nearest_idx);
-
+			
 			// 5. 最近点对的返回结果加点加边
+			auto res = update_indexes(nearest_idx, nearest_points, index2edge, edge2index, index2vertex, vertex2index);
 
 			delete nearest_points;
 			delete nearest_idx;
 			delete rtree;
 			delete index2geometry_segment;
 			delete school_points;
+
+			return res;
 		}
 	}
 }
