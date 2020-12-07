@@ -12,6 +12,7 @@
 #include <ctime>
 #include <gdal_priv.h>
 
+#include "model.hpp"
 #include "utility.hpp"
 #include "index.hpp"
 #include "insert_school.hpp"
@@ -44,7 +45,7 @@ int main()
 	auto start_time = clock();
 	
 	// 测试一下插入学校点
-	ttts::strategy::insert_school::solve<ttts::point_g>(school_file, index2edge, index2vertex);
+	ttts::strategy::insert_school::solve<ttts::model::point_g>(school_file, index2edge, index2vertex);
 	auto end_time = clock();
 
 	cout << "Index Time: " << end_time - start_time << endl;

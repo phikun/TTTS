@@ -18,16 +18,12 @@
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
 #include <ogrsf_frmts.h>
 
-#include "edge.hpp"
+#include "model.hpp"
 
 namespace ttts
 {
-	typedef boost::geometry::model::point<double, 2, boost::geometry::cs::geographic<boost::geometry::degree> > point_g;  // 地理坐标的点
-	typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_p;  // 投影坐标的点
-	
 	/// <summary>
 	///		输入路网的shapefile，构建顶点表
 	/// </summary>
