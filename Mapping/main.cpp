@@ -11,6 +11,7 @@
 #include <vector>
 #include <ctime>
 #include <gdal_priv.h>
+#include <opencv2/opencv.hpp>
 
 #include "model.hpp"
 #include "utility.hpp"
@@ -30,10 +31,11 @@ int main()
 	const string school_file = "C:/Users/zgcyx/Desktop/upload/School-WGS84.shp";
 	const string roadFile = "C:/Users/zgcyx/Desktop/upload/Road-WGS84-Speed.shp";
 	const string speed_field_name = "speed";
+	const string tif_file = "C:/Users/zgcyx/Desktop/upload/Beijing-RoadMask-ArcGIS.tif";
 
 	cout << "Hello World!" << endl;
 	
-	// 构建顶点表
+	/* // 构建顶点表
 	const auto pair1 = ttts::build_vertex_table(roadFile);
 	const auto index2vertex = pair1->first;
 	const auto vertex2index = pair1->second;
@@ -60,7 +62,22 @@ int main()
 	delete school_vertex_index;
 	delete edge2index, index2edge;
 	delete index2vertex, vertex2index;
-	delete pair2, pair1;
+	delete pair2, pair1;  */
+
+	// 读tif、计算栅格中心点经纬度、制图
+	const auto tif = ttts::read_tif(tif_file);
+
+	cv::Mat_<unsigned char> mat(tif->n_rows, tif->n_cols);
+	for (auto i = 0; i < tif->n_rows; ++i)
+		for (auto j = 0; j < tif->n_cols; ++j)
+			mat(i, j) = (*(tif->mat))(i, j) ? 255 : 0;
+	
+	// cv::imshow("Test", mat);
+	cv::imwrite("./test.bmp", mat);
+	cv::waitKey(0);
+	
+	delete tif->mat;  // 需要先把结构体中的指针释放掉
+	delete tif;
 	
 	system("PAUSE");
 	return 0;

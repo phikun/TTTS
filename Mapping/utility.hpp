@@ -19,11 +19,16 @@
 #include <boost/unordered_set.hpp>
 #include <boost/geometry.hpp>
 #include <ogrsf_frmts.h>
+#include <opencv2/opencv.hpp>
 
 #include "model.hpp"
 
 namespace ttts
 {
+	// 获取tif数据矩阵的函数，先把声明放前面
+	cv::Mat_<bool>* get_data_matrix(const GDALDataType& data_type, GDALDataset* pDataSet, const int& n_rows, const int& n_cols, const int& n_bands, const double& no_data_value);
+
+	
 	/// <summary>
 	///		输入路网的shapefile，构建顶点表
 	/// </summary>
@@ -240,5 +245,91 @@ namespace ttts
 		}
 		
 		return res;
+	}
+
+	/// <summary>
+	///		读只有一个波段的Tif，返回数据矩阵、no_data_value、坐标信息
+	/// </summary>
+	inline model::tif_dataset* read_tif(std::string tif_file)
+	{
+		auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpen(tif_file.c_str(), GA_ReadOnly));
+
+		const auto n_bands = pDataSet->GetRasterCount();
+		const auto n_cols = pDataSet->GetRasterXSize();
+		const auto n_rows = pDataSet->GetRasterYSize();
+
+		if (n_bands != 1)
+			throw std::exception("Input TIF file must have 1 band!");
+
+		const auto data_type = pDataSet->GetRasterBand(1)->GetRasterDataType();
+		const auto no_data_value = pDataSet->GetRasterBand(1)->GetNoDataValue();
+
+		const auto pTif = new model::tif_dataset();
+		pTif->n_rows = n_rows;
+		pTif->n_cols = n_cols;
+		pTif->no_data_value = no_data_value;
+		
+		pDataSet->GetGeoTransform(pTif->trans);  // 获取坐标变换的6个参数
+
+		const auto proj = pDataSet->GetProjectionRef();
+		pTif->proj = std::string(proj);  // 获取坐标系定义
+
+		pTif->mat = get_data_matrix(data_type, pDataSet, n_rows, n_cols, n_bands, no_data_value);  // 获取数据矩阵【只考虑是否是NoData】
+		
+		return pTif;
+	}
+
+	/// <summary>
+	///		从tif中读取数据，返回是否是控制的矩阵，用于read_tif函数调用
+	///		【此函数类似于简单工厂】
+	/// </summary>
+	cv::Mat_<bool>* get_data_matrix(const GDALDataType& data_type, GDALDataset* pDataSet, const int& n_rows, const int& n_cols, const int& n_bands, const double& no_data_value)
+	{
+		const auto mat = new cv::Mat_<bool>(n_rows, n_cols);
+		auto ptr = 0;
+		
+		if (data_type == GDT_Byte)
+		{
+			const auto data_b = new unsigned char[n_bands * n_rows * n_cols];
+			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_b, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+			const auto fill_value_b = static_cast<unsigned char>(no_data_value);
+			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_b != data_b[ptr++];
+			return mat;
+		}
+		if (data_type == GDT_Int16)
+		{
+			const auto data_d = new short[n_bands * n_rows * n_cols];
+			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_d, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+			const auto fill_value_d = static_cast<short>(no_data_value);
+			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_d != data_d[ptr++];
+			return mat;
+		}
+		if (data_type == GDT_Int32)
+		{
+			const auto data_ld = new int[n_bands * n_rows * n_cols];
+			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_ld, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+			const auto fill_value_ld = static_cast<int>(no_data_value);
+			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_ld != data_ld[ptr++];
+			return mat;
+		}
+		if (data_type == GDT_Float32)
+		{
+			const auto data_f = new float[n_bands * n_rows * n_cols];
+			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_f, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+			const auto fill_value_f = static_cast<float>(no_data_value);
+			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_f != data_f[ptr++];
+			return mat;
+		}
+		if (data_type == GDT_Float64)
+		{
+			const auto data_lf = new double[n_bands * n_rows * n_cols];
+			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_lf, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+			const auto fill_value_lf = no_data_value;
+			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_lf != data_lf[ptr++];
+			return mat;
+		}
+
+		// 不属于以上类别，说明对该类型的数据未实现读取方法，抛出异常
+		throw std::exception("No implement error: mysterious data type!");
 	}
 }

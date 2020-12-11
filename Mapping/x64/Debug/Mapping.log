@@ -109,6 +109,13 @@ f:\gdal\include\gdal_priv.h(1513): warning C4251: “GDALDriverManager::oMapName
               _Kty=CPLString,
               _Ty=GDALDriver *
           ]
+  f:\boost_1_74_0\boost\range\result_iterator.hpp(20): note: This header is deprecated. Use <boost/range/iterator.hpp> instead.
+  f:\boost_1_74_0\boost\range\const_reverse_iterator.hpp(20): note: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.
+  f:\boost_1_74_0\boost\range\reverse_result_iterator.hpp(20): note: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.
+f:\boost_1_74_0\boost\geometry\formulas\area_formulas.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+f:\boost_1_74_0\boost\geometry\formulas\vertex_latitude.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+f:\boost_1_74_0\boost\geometry\strategies\geographic\area.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  f:\boost_1_74_0\boost\detail\no_exceptions_support.hpp(17): note: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.
 f:\gdal\include\ogrsf_frmts.h(74): warning C4251: “OGRLayer::m_poPrivate”: class“std::unique_ptr<OGRLayer::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRLayer”的客户端使用
           with
           [
@@ -129,5 +136,4 @@ f:\gdal\include\ogrsf_frmts.h(81): warning C4251: “OGRLayer::FeatureIterator::
           [
               _Ty=OGRLayer::FeatureIterator::Private
           ]
-    正在创建库 G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.lib 和对象 G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.exp
   Mapping.vcxproj -> G:\新建文件夹 08\Project\2020.10.10 Education\SourceCode-GitHub\MappingOfSchoolTravelTime\TravelTimeMapping\ver03\x64\Debug\Mapping.exe
