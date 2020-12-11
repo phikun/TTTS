@@ -135,6 +135,7 @@
     <ClInclude Include="index.hpp" />
     <ClInclude Include="insert_school.hpp" />
     <ClInclude Include="strategy.hpp" />
+    <ClInclude Include="travel_time.hpp" />
     <ClInclude Include="utility.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

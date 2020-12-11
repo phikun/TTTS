@@ -127,7 +127,7 @@ namespace ttts { namespace strategy
 			 
 			// 2. 对当前道路建空间索引
 			const auto index2geometry_segment = build_index_to_geometry_edge<TPoint>(index2edge, index2vertex);
-			const auto rtree = index::build_vertex_rtree(index2geometry_segment);
+			const auto rtree = index::build_rtree(index2geometry_segment);
 			
 			// 3. 求每个学校点最临近的道路ID，【到目前位置测试正确】
 			const auto nearest_idx = find_nearest_segment(school_points, rtree);

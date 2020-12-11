@@ -21,7 +21,7 @@ namespace ttts
 		///		空间索引的形式是(geometry, index)，要求index是int型
 		/// </summary>
 		template<typename TGeometry, typename TStar = boost::geometry::index::rstar<16, 4> >
-		boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>* build_vertex_rtree(boost::unordered_map<int, TGeometry>* index2geometry)
+		boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>* build_rtree(boost::unordered_map<int, TGeometry>* index2geometry)
 		{
 			auto rtree = new boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>();
 

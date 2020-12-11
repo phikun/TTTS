@@ -18,6 +18,7 @@
 #include "index.hpp"
 #include "insert_school.hpp"
 #include "dijkstra.hpp"
+#include "travel_time.hpp"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ int main()
 
 	cout << "Hello World!" << endl;
 	
-	/* // 构建顶点表
+	// 构建顶点表
 	const auto pair1 = ttts::build_vertex_table(roadFile);
 	const auto index2vertex = pair1->first;
 	const auto vertex2index = pair1->second;
@@ -57,27 +58,28 @@ int main()
 	const auto vertex_time = ttts::strategy::dijkstra::solve<ttts::model::point_g>(index2vertex, index2edge, school_vertex_index);
 	const auto dijkstra_end_time = clock();
 	cout << "Dijkstra Time: " << fixed << setprecision(3) << (dijkstra_end_time - dijkstra_start_time) / 1000.0 << endl;
-	
-	delete vertex_time;
-	delete school_vertex_index;
-	delete edge2index, index2edge;
-	delete index2vertex, vertex2index;
-	delete pair2, pair1;  */
 
 	// 读tif、计算栅格中心点经纬度、制图
 	const auto tif = ttts::read_tif(tif_file);
 
-	cv::Mat_<unsigned char> mat(tif->n_rows, tif->n_cols);
-	for (auto i = 0; i < tif->n_rows; ++i)
-		for (auto j = 0; j < tif->n_cols; ++j)
-			mat(i, j) = (*(tif->mat))(i, j) ? 255 : 0;
+	// 然后求栅格中心点的经纬度
+	ttts::strategy::get_center_coordinate<ttts::model::point_g>(tif);
+
+	// 提取需要直接求travel time的栅格，不妨直接生成vector<geometry>
 	
-	// cv::imshow("Test", mat);
-	cv::imwrite("./test.bmp", mat);
-	cv::waitKey(0);
+	// 【这里还需要每个栅格对应的行列号，具体等把travel time的主要函数写完再说】
 	
-	delete tif->mat;  // 需要先把结构体中的指针释放掉
+	// 对calculate_vector算travel time
+	const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(index2vertex);
+
+	delete res;
 	delete tif;
+
+	delete vertex_time;
+	delete school_vertex_index;
+	delete edge2index, index2edge;
+	delete index2vertex, vertex2index;
+	delete pair2, pair1;
 	
 	system("PAUSE");
 	return 0;

@@ -11,8 +11,10 @@
 
 #include <iostream>
 #include <cmath>
-#include "model.hpp"
+#include <algorithm>
 #include <boost/geometry.hpp>
+
+#include "model.hpp"
 
 namespace ttts
 {
@@ -98,6 +100,106 @@ namespace ttts
 			return nearest_point;
 		}
 
-		// 然后还可以求投影坐标系下的最近点，现在不需要，就先不弄了
+		// 【然后还可以求投影坐标系下的最近点，现在不需要，就先不弄了】
+
+		/// <summary>
+		///		给定一个tif_dataset，按照坐标变换的参数求栅格中心点的经纬度
+		///		用于获取栅格中心点的get_center_coordinate函数调用
+		///	</summary>
+		inline void calculate_center_lngs_lats(model::tif_dataset* pTif)
+		{
+			if (pTif == nullptr || pTif->mat == nullptr)
+				throw std::exception("Unable to calculate center longitude and latitude of an emperor's TIFF!");
+
+			const auto xoffset = pTif->trans[1] / 2.0;
+			const auto yoffset = pTif->trans[5] / 2.0;
+
+			pTif->center_lngs = new cv::Mat_<double>(pTif->n_rows, pTif->n_cols);
+			pTif->center_lats = new cv::Mat_<double>(pTif->n_rows, pTif->n_cols);
+
+#			pragma omp parallel for
+			for (auto i = 0; i < pTif->n_rows; ++i)
+				for (auto j = 0; j < pTif->n_cols; ++j)
+				{
+					const auto lng = pTif->trans[0] + j * pTif->trans[1] + i * pTif->trans[2] + xoffset;
+					const auto lat = pTif->trans[3] + j * pTif->trans[4] + i * pTif->trans[5] + yoffset;
+					(*pTif->center_lngs)(i, j) = lng;
+					(*pTif->center_lats)(i, j) = lat;
+				}
+			
+		}
+
+		/// <summary>
+		///		给定一个tif_dataset，按照坐标变换的参数求栅格中心点坐标
+		///		在TPoint中指定是地理坐标或投影坐标，此后做特化处理；
+		/// </summary>
+		template <typename TPoint>
+		void get_center_coordinate(model::tif_dataset* pTif)
+		{
+			std::cout << "Call function get_center_coordinate" << std::endl;
+			throw std::exception("No implement error!");
+		}
+
+		/// <summary>
+		///		给定一个tif_dataset，按照坐标变换的参数求栅格中心点坐标
+		///		对地理坐标点的特化，直接调用calculate_center_lngs_lats函数即可
+		///		【目前不需要完成投影坐标点的特化，那个有需要再说】
+		/// </summary>
+		template <>
+		inline void get_center_coordinate<model::point_g>(model::tif_dataset* pTif)
+		{
+			calculate_center_lngs_lats(pTif);
+		}
+
+		// 【然后还可以对投影坐标系下的栅格中心点做投影，现在不需要，就先不弄了】
+
+		/// <summary>
+		///		计算Travel Time时，根据最短步行距离构造查询框，分地理坐标的投影坐标特化
+		///		【函数参数一会再说】
+		/// </summary>
+		template <typename TPoint>
+		boost::geometry::model::box<TPoint> construct_query_box(const TPoint& p0, const double& mdist, const double& dx, const double& dy)
+		{
+			std::cout << "Call function construct_query_box" << std::endl;
+			throw std::exception("No implement error!");
+		}
+
+		/// <summary>
+		///		根据最短步行距离构造查询框，用于Travel Time调用
+		///		【此函数是对于地理坐标的特化，保证查询框不大于栅格大小】
+		/// </summary>
+		template <>
+		inline boost::geometry::model::box<model::point_g> construct_query_box(const model::point_g& p0, const double& mdist, const double& dx, const double& dy)
+		{
+			const auto x = p0.get<0>();
+			const auto y = p0.get<1>();
+
+			const auto delta_lng = std::min(mdist / R * 360.0 / (2.0 * PI), static_cast<llf>(dx));
+			const auto delta_lat = std::min(mdist / R * 360.0 / (2.0 * PI), static_cast<llf>(dy));
+			
+			const auto min_corner = model::point_g(x - delta_lng, y - delta_lat);
+			const auto max_corner = model::point_g(x + delta_lng, y + delta_lat);
+			const auto query_box = boost::geometry::model::box<model::point_g>(min_corner, max_corner);
+			return query_box;
+		}
+
+		/// <summary>
+		///		根据最短步行距离构造查询框，用于Travel Time调用
+		///		【此函数是对于投影坐标的特化，保证查询框不大于栅格大小】
+		/// </summary>
+		template <>
+		inline boost::geometry::model::box<model::point_p> construct_query_box(const model::point_p& p0, const double& mdist, const double& dx, const double& dy)
+		{
+			const auto x = p0.get<0>();
+			const auto y = p0.get<1>();
+
+			const auto delta_x = std::min(mdist, dx);
+			const auto delta_y = std::min(mdist, dy);
+
+			const auto min_corner = model::point_p(x - delta_x, y - delta_y);
+			const auto max_corner = model::point_p(x + delta_x, y + delta_y);
+			const auto query_box = boost::geometry::model::box<model::point_p>(min_corner, max_corner);
+			return query_box;
+		}
 	}
 }

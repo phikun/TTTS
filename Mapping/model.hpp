@@ -39,6 +39,23 @@ namespace ttts
 			double trans[trans_length];  // 坐标变换的6个参数
 			double no_data_value;  // 空值
 			cv::Mat_<bool>* mat;  // 数据矩阵，【这里只关心数据输入数据是否是no_data，所以直接指定bool型】
+			cv::Mat_<double>* center_lngs;  // 栅格中心点的经度或X坐标，取决于地理坐标系或投影坐标系
+			cv::Mat_<double>* center_lats;  // 栅格中心点的纬度或Y坐标，取决于地理坐标系或投影坐标系
+			tif_dataset()
+			{
+				this->n_rows = this->n_cols = 0;
+				this->proj = std::string("");
+				for (auto i = 0; i < trans_length; ++i) this->trans[i] = 0;
+				this->no_data_value = -1;
+				this->mat = nullptr;
+				this->center_lngs = this->center_lats = nullptr;
+			}
+			~tif_dataset()
+			{
+				if (mat != nullptr) delete this->mat;
+				if (center_lngs != nullptr) delete this->center_lngs;
+				if (center_lats != nullptr) delete this->center_lats;
+			}
 		};
 	}
 }

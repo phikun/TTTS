@@ -220,6 +220,31 @@ namespace ttts
 	}
 
 	/// <summary>
+	///		构造id到boost::geometry::model::point的索引，用于建立空间索引
+	///		对于上学时间>=INF的结点（即到不了学校的结点），不加入它们
+	/// </summary>
+	template<typename TPoint>
+	boost::unordered_map<int, TPoint>* build_index_to_geometry_point(boost::unordered_map<int, std::pair<double, double> >* index2vertex, std::vector<double>* vertex_time)
+	{
+		const auto res = new boost::unordered_map<int, TPoint>();
+
+		for (const auto& p : *index2vertex)
+		{
+			const auto index = p.first;
+			const auto x = p.second.first;
+			const auto y = p.second.second;
+
+			if ((*vertex_time)[index] >= model::INF)
+				continue;
+			
+			const auto pnt = TPoint(x, y);
+			res->insert(std::make_pair(index, pnt));
+		}
+
+		return res;
+	}
+	
+	/// <summary>
 	///		构造id到boost::geometry::model::segment的索引，用于建立空间索引
 	///		【实际上build_edge_table】时可直接返回这种索引
 	/// </summary>
