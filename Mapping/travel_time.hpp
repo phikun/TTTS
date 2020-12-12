@@ -24,21 +24,46 @@ namespace ttts { namespace strategy
 		
 		/// <summary>
 		///		从tif_dataset的mat中选择需要计算的栅格（即mat值为true的栅格）
-		///		将栅格中心点坐标放入vector中
+		///		将栅格中心点坐标放入vector中；并将待计算栅格行列号写入rows和lats数组中
 		/// </summary>
 		template <typename TPoint>
-		std::vector<TPoint>* select_calculate_vector(model::tif_dataset* pTif)
+		std::vector<TPoint>* select_calculate_vector(model::population_dataset* pTif, std::vector<int>* rows, std::vector<int>* cols)
 		{
+			if (pTif->center_lngs == nullptr || pTif->center_lats == nullptr)
+				throw std::exception("Emperor's Center Coordinates!");
+			
 			const auto res = new std::vector<TPoint>();
+			rows->clear(); cols->clear();
 
 			for (auto i = 0; i < pTif->n_rows; ++i)
 				for (auto j = 0; j < pTif->n_cols; ++j)
-					if ((*pTif->mat)(i, j) == true)
-						res->push_back(TPoint((*pTif->center_lngs)(i, j), (*pTif->center_lats)(i, j)));
+				{
+					if ((*pTif->mat)(i, j) == false)
+						continue;
+
+					res->push_back(TPoint((*pTif->center_lngs)(i, j), (*pTif->center_lats)(i, j)));
+					rows->push_back(i);
+					cols->push_back(j);
+				}
 
 			return res;
 		}
 
+		/// <summary>
+		///		获取速度栅格中、待计算栅格的速度
+		/// </summary>
+		inline std::vector<double>* get_raster_speed(model::speed_dataset* speed_raster, std::vector<int>* rows, std::vector<int>* cols)
+		{
+			assert(rows->size() == cols->size());
+			
+			const auto res = new std::vector<double>(static_cast<int>(rows->size()));
+
+			for (auto i = 0; i < static_cast<int>(rows->size()); ++i)
+				(*res)[i] = (*speed_raster->mat)((*rows)[i], (*cols)[i]);
+			
+			return res;
+		}
+		
 		/// <summary>
 		///		求得一个栅格中心点上学的Travel Time，这里限制【必须在当前栅格中步行】
 		/// </summary>
@@ -68,7 +93,8 @@ namespace ttts { namespace strategy
 			segment_rtree->query(boost::geometry::index::intersects(query_box), std::back_inserter(selected_segments));
 
 			// Step3: 遍历查到的线串，更新最短时间
-			auto res = mtime;
+			// auto res = mtime;
+			auto res = model::INF;  // 保守估计，里面可能因为浮点数精度找不到点，因此初始时间应该很大
 			BOOST_FOREACH(const auto& segment_pair, selected_segments)
 			{
 				const auto seg = segment_pair.first;
@@ -135,8 +161,8 @@ namespace ttts { namespace strategy
 		///		求Travel Time函数，各种此步操作在该函数中汇总
 		/// </summary>
 		template <typename TPoint>
-		std::vector<double>* solve(model::tif_dataset* population_raster,  /* 人口栅格 */
-								   model::tif_dataset* speed_raster,  /* 道路速度栅格，相当于DEM */
+		std::vector<double>* solve(model::population_dataset* population_raster,  /* 人口栅格 */
+								   model::speed_dataset* speed_raster,  /* 道路速度栅格，相当于DEM */
 								   boost::unordered_map<int, std::pair<double, double> >* index2vertex,  /* 用于建立临时结点 */
 								   boost::unordered_map<int, model::edge>* index2edge,  /* 用于查找道路始终点ID号*/
 								   std::vector<double>* vertex_time  /* 路网结点上学时间 */
@@ -147,34 +173,38 @@ namespace ttts { namespace strategy
 			const auto vertex_rtree = index::build_rtree(index2geometry_vertex);
 
 			// 2. 对道路线段建索引
-			const auto index2geometry_segment = build_index_to_geometry_edge<TPoint>(index2edge);
+			const auto index2geometry_segment = build_index_to_geometry_edge<TPoint>(index2edge, index2vertex);
 			const auto segment_rtree = index::build_rtree(index2geometry_segment);
 
 			std::cout << "After build indexes" << std::endl;
 
-			// 3. 获取需要计算的栅格中心点
-			const auto raster_centers = select_calculate_vector<model::point_g>(population_raster);
+			// 3. 获取需要计算的栅格中心点，这里还应该返回对应栅格中心点的经纬度
+			const auto rows = new std::vector<int>();
+			const auto cols = new std::vector<int>();
+			const auto raster_centers = select_calculate_vector<model::point_g>(population_raster, rows, cols);
 
-			// 4. 需要计算的栅格的速度
-			// 【明天再说】
-			// 【这里还需要每个栅格对应的行列号，具体等把travel time的主要函数写完再说】
+			// 4. 提取待求栅格的速度
+			const auto raster_speed = get_raster_speed(speed_raster, rows, cols);
 
 			// 5. 给出栅格在X和Y方向的半长度
 			const auto dx = fabs(population_raster->trans[1]) / 2.0;
 			const auto dy = fabs(population_raster->trans[5]) / 2.0;
-			std::cout << "dx = " << dx << std::endl;
-			std::cout << "dy = " << dy << std::endl;
+			std::cout << "dx = " << std::fixed << std::setprecision(10) << dx << std::endl;
+			std::cout << "dy = " << std::fixed << std::setprecision(10) << dy << std::endl;
 			
-			// 3. 循环计算每个栅格中心点的Travel Time
-			const auto res = calculate_travel_times(raster_centers, , vertex_rtree, segment_rtree, index2vertex, index2edge, vertex_time, dx, dy);
+			// 6. 循环计算每个栅格中心点的Travel Time
+			const auto res = calculate_travel_times(raster_centers, raster_speed, vertex_rtree, segment_rtree, index2vertex, index2edge, vertex_time, dx, dy);
 
+			delete raster_speed;
 			delete raster_centers;
+			delete rows, cols;
 			delete segment_rtree;
 			delete index2geometry_segment;
 			delete vertex_rtree;
 			delete index2geometry_vertex;
 
-			const auto res = new std::vector<double>();
+			// 按理由这一步输出应该是矩阵
+			
 			return res;
 		}
 	}	

@@ -32,7 +32,8 @@ int main()
 	const string school_file = "C:/Users/zgcyx/Desktop/upload/School-WGS84.shp";
 	const string roadFile = "C:/Users/zgcyx/Desktop/upload/Road-WGS84-Speed.shp";
 	const string speed_field_name = "speed";
-	const string tif_file = "C:/Users/zgcyx/Desktop/upload/Beijing-RoadMask-ArcGIS.tif";
+	const string population_file = "C:/Users/zgcyx/Desktop/upload/Beijing-RoadMask-ArcGIS.tif";
+	const string walk_speed_file = "C:/Users/zgcyx/Desktop/upload/Beijing-WalkSpeed.tif";
 
 	cout << "Hello World!" << endl;
 	
@@ -60,20 +61,30 @@ int main()
 	cout << "Dijkstra Time: " << fixed << setprecision(3) << (dijkstra_end_time - dijkstra_start_time) / 1000.0 << endl;
 
 	// 读tif、计算栅格中心点经纬度、制图
-	const auto tif = ttts::read_tif(tif_file);
+	const auto population_raster = ttts::read_population_raster(population_file);	
+	const auto walk_speed_raster = ttts::read_walk_speed_raster(walk_speed_file);
 
-	// 然后求栅格中心点的经纬度
-	ttts::strategy::get_center_coordinate<ttts::model::point_g>(tif);
+	cout << "After read" << endl;
+	
+	// 这里直接求栅格中心点的经纬度
+	ttts::strategy::get_center_coordinate<ttts::model::point_g>(population_raster);
 
 	// 提取需要直接求travel time的栅格，不妨直接生成vector<geometry>
 	
 	// 【这里还需要每个栅格对应的行列号，具体等把travel time的主要函数写完再说】
 	
 	// 对calculate_vector算travel time
-	const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(index2vertex);
+	// const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(index2vertex);
+	const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(population_raster, walk_speed_raster, index2vertex, index2edge, vertex_time);
 
+	for (auto i = 0; i < 10; ++i)
+		cout << fixed << setprecision(3) << (*res)[i] << endl;
+
+	// 数值是合理的，现在可以建图再跑一次Dijkstra了
+	
 	delete res;
-	delete tif;
+	delete walk_speed_raster;
+	delete population_raster;
 
 	delete vertex_time;
 	delete school_vertex_index;

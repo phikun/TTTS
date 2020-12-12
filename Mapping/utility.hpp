@@ -275,7 +275,7 @@ namespace ttts
 	/// <summary>
 	///		读只有一个波段的Tif，返回数据矩阵、no_data_value、坐标信息
 	/// </summary>
-	inline model::tif_dataset* read_tif(std::string tif_file)
+	inline model::population_dataset* read_population_raster(std::string tif_file)
 	{
 		auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpen(tif_file.c_str(), GA_ReadOnly));
 
@@ -289,7 +289,7 @@ namespace ttts
 		const auto data_type = pDataSet->GetRasterBand(1)->GetRasterDataType();
 		const auto no_data_value = pDataSet->GetRasterBand(1)->GetNoDataValue();
 
-		const auto pTif = new model::tif_dataset();
+		const auto pTif = new model::population_dataset();
 		pTif->n_rows = n_rows;
 		pTif->n_cols = n_cols;
 		pTif->no_data_value = no_data_value;
@@ -319,6 +319,7 @@ namespace ttts
 			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_b, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
 			const auto fill_value_b = static_cast<unsigned char>(no_data_value);
 			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_b != data_b[ptr++];
+			delete[] data_b;
 			return mat;
 		}
 		if (data_type == GDT_Int16)
@@ -327,6 +328,7 @@ namespace ttts
 			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_d, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
 			const auto fill_value_d = static_cast<short>(no_data_value);
 			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_d != data_d[ptr++];
+			delete[] data_d;
 			return mat;
 		}
 		if (data_type == GDT_Int32)
@@ -335,6 +337,7 @@ namespace ttts
 			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_ld, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
 			const auto fill_value_ld = static_cast<int>(no_data_value);
 			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_ld != data_ld[ptr++];
+			delete[] data_ld;
 			return mat;
 		}
 		if (data_type == GDT_Float32)
@@ -343,6 +346,7 @@ namespace ttts
 			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_f, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
 			const auto fill_value_f = static_cast<float>(no_data_value);
 			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_f != data_f[ptr++];
+			delete[] data_f;
 			return mat;
 		}
 		if (data_type == GDT_Float64)
@@ -351,10 +355,45 @@ namespace ttts
 			pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data_lf, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
 			const auto fill_value_lf = no_data_value;
 			for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*mat)(i, j) = fill_value_lf != data_lf[ptr++];
+			delete[] data_lf;
 			return mat;
 		}
 
 		// 不属于以上类别，说明对该类型的数据未实现读取方法，抛出异常
 		throw std::exception("No implement error: mysterious data type!");
+	}
+
+	inline model::speed_dataset* read_walk_speed_raster(std::string tif_file)
+	{
+		auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpen(tif_file.c_str(), GA_ReadOnly));
+
+		const auto n_bands = pDataSet->GetRasterCount();
+		const auto n_cols = pDataSet->GetRasterXSize();
+		const auto n_rows = pDataSet->GetRasterYSize();
+
+		if (n_bands != 1)
+			throw std::exception("Input TIF file must have 1 band!");
+
+		const auto data_type = pDataSet->GetRasterBand(1)->GetRasterDataType();
+		if (data_type != GDT_Float64)
+			throw std::exception("Walk Speed Raster can only accept double type!");
+		
+		const auto pTif = new model::speed_dataset();
+		pTif->n_rows = n_rows;
+		pTif->n_cols = n_cols;
+
+		pDataSet->GetGeoTransform(pTif->trans);  // 获取坐标变换的6个参数
+
+		const auto proj = pDataSet->GetProjectionRef();
+		pTif->proj = std::string(proj);  // 获取坐标系定义
+
+		const auto data = new double[n_bands * n_rows * n_cols];
+		pTif->mat = new cv::Mat_<double>(n_rows, n_cols);
+		pDataSet->RasterIO(GF_Read, 0, 0, n_cols, n_rows, data, n_cols, n_rows, data_type, n_bands, nullptr, 0, 0, 0);
+		auto ptr = 0;
+		for (auto i = 0; i < n_rows; ++i) for (auto j = 0; j < n_cols; ++j) (*pTif->mat)(i, j) = data[ptr++];
+
+		delete[] data;
+		return pTif;
 	}
 }

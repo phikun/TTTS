@@ -106,7 +106,7 @@ namespace ttts
 		///		给定一个tif_dataset，按照坐标变换的参数求栅格中心点的经纬度
 		///		用于获取栅格中心点的get_center_coordinate函数调用
 		///	</summary>
-		inline void calculate_center_lngs_lats(model::tif_dataset* pTif)
+		inline void calculate_center_lngs_lats(model::population_dataset* pTif)
 		{
 			if (pTif == nullptr || pTif->mat == nullptr)
 				throw std::exception("Unable to calculate center longitude and latitude of an emperor's TIFF!");
@@ -134,7 +134,7 @@ namespace ttts
 		///		在TPoint中指定是地理坐标或投影坐标，此后做特化处理；
 		/// </summary>
 		template <typename TPoint>
-		void get_center_coordinate(model::tif_dataset* pTif)
+		void get_center_coordinate(model::population_dataset* pTif)
 		{
 			std::cout << "Call function get_center_coordinate" << std::endl;
 			throw std::exception("No implement error!");
@@ -146,7 +146,7 @@ namespace ttts
 		///		【目前不需要完成投影坐标点的特化，那个有需要再说】
 		/// </summary>
 		template <>
-		inline void get_center_coordinate<model::point_g>(model::tif_dataset* pTif)
+		inline void get_center_coordinate<model::point_g>(model::population_dataset* pTif)
 		{
 			calculate_center_lngs_lats(pTif);
 		}
