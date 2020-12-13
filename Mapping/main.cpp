@@ -34,8 +34,10 @@ int main()
 	const string speed_field_name = "speed";
 	const string population_file = "C:/Users/zgcyx/Desktop/upload/Beijing-RoadMask-ArcGIS.tif";
 	const string walk_speed_file = "C:/Users/zgcyx/Desktop/upload/Beijing-WalkSpeed.tif";
+	const string output_file = "C:/Users/zgcyx/Desktop/upload/output-Pack-RTree.tif";
 
 	cout << "Hello World!" << endl;
+	const auto overall_start_time = clock();
 	
 	// 构建顶点表
 	const auto pair1 = ttts::build_vertex_table(roadFile);
@@ -61,37 +63,37 @@ int main()
 	cout << "Dijkstra Time: " << fixed << setprecision(3) << (dijkstra_end_time - dijkstra_start_time) / 1000.0 << endl;
 
 	// 读tif、计算栅格中心点经纬度、制图
-	const auto population_raster = ttts::read_population_raster(population_file);	
+	const auto population_raster = ttts::read_population_raster<ttts::model::point_g>(population_file);	
 	const auto walk_speed_raster = ttts::read_walk_speed_raster(walk_speed_file);
 
 	cout << "After read" << endl;
 	
-	// 这里直接求栅格中心点的经纬度
-	ttts::strategy::get_center_coordinate<ttts::model::point_g>(population_raster);
-
-	// 提取需要直接求travel time的栅格，不妨直接生成vector<geometry>
+	// 对calculate_vector算travel time，直接返回结果矩阵
+	const auto travel_time_start_time = clock();
+	const auto mat = ttts::strategy::travel_time::solve<ttts::model::point_g>(population_raster, walk_speed_raster, index2vertex, index2edge, vertex_time);
+	const auto travel_time_end_time = clock();
+	cout << "Travel Time Time: " << fixed << setprecision(3) << (travel_time_end_time - travel_time_start_time) / 1000.0 << endl;
 	
-	// 【这里还需要每个栅格对应的行列号，具体等把travel time的主要函数写完再说】
+	// 将结果保存成GeoTiff
+	ttts::write_result_to_geotiff(output_file, mat, population_raster);
 	
-	// 对calculate_vector算travel time
-	// const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(index2vertex);
-	const auto res = ttts::strategy::travel_time::solve<ttts::model::point_g>(population_raster, walk_speed_raster, index2vertex, index2edge, vertex_time);
-
-	for (auto i = 0; i < 10; ++i)
-		cout << fixed << setprecision(3) << (*res)[i] << endl;
-
-	// 数值是合理的，现在可以建图再跑一次Dijkstra了
-	
-	delete res;
+	delete mat;
 	delete walk_speed_raster;
 	delete population_raster;
-
+	
 	delete vertex_time;
 	delete school_vertex_index;
-	delete edge2index, index2edge;
-	delete index2vertex, vertex2index;
-	delete pair2, pair1;
-	
+	delete edge2index;
+	delete index2edge;
+	delete index2vertex;
+	delete vertex2index;
+	delete pair2;
+	delete pair1;
+
+	const auto overall_end_time = clock();
+	cout << "Overall Time: " << fixed << setprecision(3) << (overall_end_time - overall_start_time) / 1000.0 << endl;
+
 	system("PAUSE");
+	
 	return 0;
 }

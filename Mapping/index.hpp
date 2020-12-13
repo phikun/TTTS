@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "utility.hpp"
+#include <utility>
+#include <vector>
 #include <boost/unordered_map.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
@@ -23,7 +24,8 @@ namespace ttts
 		template<typename TGeometry, typename TStar = boost::geometry::index::rstar<16, 4> >
 		boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>* build_rtree(boost::unordered_map<int, TGeometry>* index2geometry)
 		{
-			auto rtree = new boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>();
+			// 暴力逐个插入：
+			/* auto rtree = new boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>();
 
 			for (const auto& pair : *index2geometry)
 			{
@@ -32,7 +34,19 @@ namespace ttts
 
 				auto value = std::make_pair(geo, index);
 				rtree->insert(value);
+			} */
+
+			// 用迭代器逐个插入
+			auto vec = std::vector<std::pair<TGeometry, int> >(static_cast<int>(index2geometry->size()));
+			auto ptr = 0;
+			for (const auto& pair : *index2geometry)
+			{
+				const auto index = pair.first;
+				const auto geo = pair.second;
+				vec[ptr++] = std::make_pair(geo, index);
 			}
+
+			const auto rtree = new boost::geometry::index::rtree<std::pair<TGeometry, int>, TStar>(vec.begin(), vec.end());
 			
 			return rtree;
 		}

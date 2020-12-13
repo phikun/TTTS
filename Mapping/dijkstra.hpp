@@ -79,11 +79,12 @@ namespace ttts { namespace strategy
 		/// <summary>
 		///		用Dijkstra算法求解最短路的主要函数
 		///		返回std::vector<double>*，表示指向double型变长数组的指针，用delete释放
+		///		2020.12.12更新：增加了初值的参数，用于travel_time直接调用
 		/// </summary>
 		inline std::vector<double>* calculate(const int& n_vertex, std::vector<edge>* edge_table)
 		{
 			std::vector<bool> vis(n_vertex + offset, false);
-			const auto time = new std::vector<double>(n_vertex + offset, INF);
+			const auto time = new std::vector<double>(n_vertex + offset, INF);;
 			(*time)[0] = 0.0;
 
 			std::priority_queue<edge> heap;

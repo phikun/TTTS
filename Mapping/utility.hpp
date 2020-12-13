@@ -22,6 +22,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "model.hpp"
+#include "strategy.hpp"
 
 namespace ttts
 {
@@ -273,9 +274,12 @@ namespace ttts
 	}
 
 	/// <summary>
-	///		读只有一个波段的Tif，返回数据矩阵、no_data_value、坐标信息
+	///		读取人口数据的Tif，需事先将非道路栅格赋成NoData，
+	///		这里只保留栅格是否是no_data、返回行列数、no_data_value、坐标等信息
+	///		并直接在此函数中计算栅格中心点的XY坐标
 	/// </summary>
-	inline model::population_dataset* read_population_raster(std::string tif_file)
+	template <typename TPoint>
+	model::population_dataset* read_population_raster(std::string tif_file)
 	{
 		auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpen(tif_file.c_str(), GA_ReadOnly));
 
@@ -300,6 +304,8 @@ namespace ttts
 		pTif->proj = std::string(proj);  // 获取坐标系定义
 
 		pTif->mat = get_data_matrix(data_type, pDataSet, n_rows, n_cols, n_bands, no_data_value);  // 获取数据矩阵【只考虑是否是NoData】
+		
+		strategy::get_center_coordinate<TPoint>(pTif);  // 根据地理坐标或投影坐标计算栅格中心点XY坐标
 		
 		return pTif;
 	}
@@ -363,6 +369,9 @@ namespace ttts
 		throw std::exception("No implement error: mysterious data type!");
 	}
 
+	/// <summary>
+	///		
+	/// </summary>
 	inline model::speed_dataset* read_walk_speed_raster(std::string tif_file)
 	{
 		auto pDataSet = reinterpret_cast<GDALDataset*>(GDALOpen(tif_file.c_str(), GA_ReadOnly));
@@ -395,5 +404,31 @@ namespace ttts
 
 		delete[] data;
 		return pTif;
+	}
+
+	/// <summary>
+	///		将计算结果写入GeoTiff
+	///		需传入结果矩阵mat、人口栅格的指针（用于获取行列号及坐标投影信息）
+	/// </summary>
+	inline void write_result_to_geotiff(std::string file_name, cv::Mat_<double>* mat, model::population_dataset* pTif)
+	{
+		const auto pszFormat = "GTiff";
+		const auto pDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+		
+		const auto pDataSet = pDriver->Create(file_name.c_str(), pTif->n_cols, pTif->n_rows, 1, GDT_Float64, nullptr);  // 1 -> 1个波段
+		pDataSet->SetGeoTransform(pTif->trans);  // 写入坐标变换向量（和输入的人口栅格一样）
+		pDataSet->SetProjection(pTif->proj.c_str());  // 写入投影信息（和输入的人口栅格一样）
+
+		// 然后写入数据
+		const auto data = new double[pTif->n_rows * pTif->n_cols];
+		auto ptr = 0;
+		for (auto i = 0; i < pTif->n_rows; ++i)
+			for (auto j = 0; j < pTif->n_cols; ++j)
+				data[ptr++] = (*mat)(i, j);
+		pDataSet->RasterIO(GF_Write, 0, 0, pTif->n_cols, pTif->n_rows, data, pTif->n_cols, pTif->n_rows, GDT_Float64, 1, nullptr, 0, 0, 0, nullptr);
+
+		GDALClose(reinterpret_cast<GDALDatasetH*>(pDataSet));
+		
+		delete[] data;
 	}
 }

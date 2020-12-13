@@ -48,21 +48,6 @@ namespace ttts { namespace strategy
 
 			return res;
 		}
-
-		/// <summary>
-		///		获取速度栅格中、待计算栅格的速度
-		/// </summary>
-		inline std::vector<double>* get_raster_speed(model::speed_dataset* speed_raster, std::vector<int>* rows, std::vector<int>* cols)
-		{
-			assert(rows->size() == cols->size());
-			
-			const auto res = new std::vector<double>(static_cast<int>(rows->size()));
-
-			for (auto i = 0; i < static_cast<int>(rows->size()); ++i)
-				(*res)[i] = (*speed_raster->mat)((*rows)[i], (*cols)[i]);
-			
-			return res;
-		}
 		
 		/// <summary>
 		///		求得一个栅格中心点上学的Travel Time，这里限制【必须在当前栅格中步行】
@@ -123,12 +108,27 @@ namespace ttts { namespace strategy
 				time = distps / wspeed + distv1 / edge.speed + (*vertex_time)[edge.from_node];
 				res = std::min(res, time);
 				time = distps / wspeed + distv2 / edge.speed + (*vertex_time)[edge.to_node];
-				res = min(res, time);
+				res = std::min(res, time);
 			}
 			
 			return res;
 		}
 
+		/// <summary>
+		///		获取待计算栅格的速度
+		/// </summary>
+		inline std::vector<double>* get_raster_speed(model::speed_dataset* speed_raster, std::vector<int>* rows, std::vector<int>* cols)
+		{
+			assert(rows->size() == cols->size());
+
+			const auto res = new std::vector<double>(static_cast<int>(rows->size()));
+
+			for (auto i = 0; i < static_cast<int>(rows->size()); ++i)
+				(*res)[i] = (*speed_raster->mat)((*rows)[i], (*cols)[i]);
+
+			return res;
+		}
+		
 		/// <summary>
 		///		循环计算每个栅格中心点的上学时间
 		/// </summary>
@@ -156,12 +156,113 @@ namespace ttts { namespace strategy
 			
 			return res;
 		}
+
+		/// <summary>
+		///		计算行列号到图中ID号的索引，用于建图
+		/// </summary>
+		inline int rc2id(const int& row, const int& col, const int& n_cols)
+		{
+			return row * n_cols + col + 1;  // 最后+1是要空出开始结点
+		}
+
+		/// <summary>
+		///		计算图中ID到到行列号的索引，用于写入结果
+		/// </summary>
+		inline std::pair<int, int> id2rc(const int& id, const int& n_cols)
+		{
+			const auto tmp = id - 1;  // 一开始-1是要空出开始结点
+			const auto row = tmp / n_cols;
+			const auto col = tmp % n_cols;
+			return std::make_pair(row, col);
+		}
+		
+		/// <summary>
+		///		对输入栅格建图，对研究区内的栅格连接其八邻域网格
+		///		这里的edge是ttts::strategy::dijkstra中的edge，包括下一个结点及其通行时间
+		/// </summart>
+		template <typename TPoint>
+		std::vector<dijkstra::edge>* build_graph(model::population_dataset* pop, model::speed_dataset* speed)
+		{
+			const auto n_nodes = pop->n_rows * pop->n_cols;
+			const auto res = new std::vector<dijkstra::edge>[n_nodes + dijkstra::offset];
+			std::cout << "n_nodes = " << n_nodes << std::endl;
+
+			const auto n_neighbors = 8;  // 考虑八邻域
+			const int di[n_neighbors] = { -1, -1, 0, 1, 1, 1, 0, -1 };  // 八邻域行号变化
+			const int dj[n_neighbors] = { 0, 1, 1, 1, 0, -1, -1, -1 };  // 八邻域列号变化
+
+			std::cout << "Before Build Graph" << std::endl;
+			
+#			pragma omp parallel for
+			for (auto i = 0; i < pop->n_rows; ++i)
+				for (auto j = 0; j < pop->n_cols; ++j)
+				{	
+					const auto now_id = rc2id(i, j, pop->n_cols);
+					const auto p1 = TPoint((*pop->center_lngs)(i, j), (*pop->center_lats)(i, j));
+					const auto speed1 = (*speed->mat)(i, j);
+					
+					for (auto k = 0; k < n_neighbors; ++k)
+					{
+						const auto ii = i + di[k];
+						const auto jj = j + dj[k];
+						if (ii < 0 || ii >= pop->n_rows || jj < 0 || jj >= pop->n_cols)
+							continue;
+
+						const auto next_id = rc2id(ii, jj, pop->n_cols);
+						const auto p2 = TPoint((*pop->center_lngs)(ii, jj), (*pop->center_lats)(ii, jj));
+						const auto speed2 = (*speed->mat)(ii, jj);
+						
+						const auto dist = boost::geometry::distance(p1, p2) / 2.0;
+						const auto time = dist / speed1 + dist / speed2;  // 通行时间是两个栅格通行时间的平均
+						
+						res[now_id].emplace_back(next_id, time);
+					}
+				}			
+			
+			return res;
+		}
+
+		/// <summary>
+		///		构造超级源点到所有道路点的出边，用于Dijkstra算法初始化
+		/// </summary>
+		inline void construct_edge_from_source_node(std::vector<dijkstra::edge>* edge_table, std::vector<double>* travel_time, std::vector<int>* center_rows, std::vector<int>* center_cols, const int& n_cols)
+		{
+			assert(center_rows->size() == center_cols->size());
+
+			for (auto i = 0; i < static_cast<int>(travel_time->size()); ++i)
+			{
+				const auto id = rc2id((*center_rows)[i], (*center_cols)[i], n_cols);
+				const auto time = (*travel_time)[i];
+				edge_table[0].emplace_back(id, time);  // 直接给边表加到上学时间最短的结点
+				edge_table[id].emplace_back(0, time);  // 维护双向图的本质，不加也行
+			}
+		}
+		
+		/// <summary>
+		///		把Dijkstra算法的运行结果写回栅格，用于输出运行结果
+		/// </summary>
+		inline cv::Mat_<double>* construct_result_matrix(std::vector<double>* travel_time, const int& n_rows, const int& n_cols)
+		{
+			const auto n_nodes = n_rows * n_cols;
+			const auto res = new cv::Mat_<double>(n_rows, n_cols);
+
+			for (auto i = 1; i <= n_nodes; ++i)  // 0号结点是开始结点，不用管它
+			{
+				const auto pair_ = id2rc(i, n_cols);
+				const auto row = pair_.first;
+				const auto col = pair_.second;
+				(*res)(row, col) = (*travel_time)[i];
+			}
+			
+			return res;
+		}
 		
 		/// <summary>
 		///		求Travel Time函数，各种此步操作在该函数中汇总
+		///		此步直接返回对栅格跑Dijkstra后的矩阵，然后包main函数中写入tif
 		/// </summary>
 		template <typename TPoint>
-		std::vector<double>* solve(model::population_dataset* population_raster,  /* 人口栅格 */
+		cv::Mat_<double>* solve(model::population_dataset* population_raster,  /* 人口栅格 */
 								   model::speed_dataset* speed_raster,  /* 道路速度栅格，相当于DEM */
 								   boost::unordered_map<int, std::pair<double, double> >* index2vertex,  /* 用于建立临时结点 */
 								   boost::unordered_map<int, model::edge>* index2edge,  /* 用于查找道路始终点ID号*/
@@ -189,12 +290,23 @@ namespace ttts { namespace strategy
 			// 5. 给出栅格在X和Y方向的半长度
 			const auto dx = fabs(population_raster->trans[1]) / 2.0;
 			const auto dy = fabs(population_raster->trans[5]) / 2.0;
-			std::cout << "dx = " << std::fixed << std::setprecision(10) << dx << std::endl;
-			std::cout << "dy = " << std::fixed << std::setprecision(10) << dy << std::endl;
 			
 			// 6. 循环计算每个栅格中心点的Travel Time
 			const auto res = calculate_travel_times(raster_centers, raster_speed, vertex_rtree, segment_rtree, index2vertex, index2edge, vertex_time, dx, dy);
 
+			std::cout << "After Calculate real Travel Time" << std::endl;
+			
+			// 7. 建图，再跑一次Dijkstra
+			const auto edge_table = build_graph<TPoint>(population_raster, speed_raster);
+			construct_edge_from_source_node(edge_table, res, rows, cols, population_raster->n_cols);
+			const auto travel_times = dijkstra::calculate(population_raster->n_rows * population_raster->n_cols, edge_table);
+			
+			// 8. 根据Dijkstra的运行结果写回矩阵
+			const auto mat = construct_result_matrix(travel_times, population_raster->n_rows, population_raster->n_cols);
+			
+			delete travel_times;
+			delete[] edge_table;
+			delete res;
 			delete raster_speed;
 			delete raster_centers;
 			delete rows, cols;
@@ -202,10 +314,8 @@ namespace ttts { namespace strategy
 			delete index2geometry_segment;
 			delete vertex_rtree;
 			delete index2geometry_vertex;
-
-			// 按理由这一步输出应该是矩阵
 			
-			return res;
+			return mat;
 		}
 	}	
 }
