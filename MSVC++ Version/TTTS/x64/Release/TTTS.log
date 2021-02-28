@@ -1,0 +1,176 @@
+﻿  main.cpp
+c1xx : warning C4199: C++/CLI、C++/CX 或 OpenMP 不支持两阶段名称查找；请使用 /Zc:twoPhase-
+f:\gdal\include\ogr_featurestyle.h(89): warning C4251: “OGRStyleTable::osLastRequestedStyleName”: class“CPLStringT<void>”需要有 dll 接口由 class“OGRStyleTable”的客户端使用
+  f:\gdal\include\cpl_string.h(323): note: 参见“CPLStringT<void>”的声明
+f:\gdal\include\cpl_json.h(153): warning C4251: “CPLJSONObject::m_osKey”: class“std::basic_string<char,std::char_traits<char>,std::allocator<char>>”需要有 dll 接口由 class“CPLJSONObject”的客户端使用
+  f:\program files\microsoft visual studio\2017\community\vc\tools\msvc\14.16.27023\include\xstring(4373): note: 参见“std::basic_string<char,std::char_traits<char>,std::allocator<char>>”的声明
+f:\gdal\include\ogr_geometry.h(947): warning C4251: “OGRCurve::ConstIterator::m_poPrivate”: class“std::unique_ptr<OGRCurve::ConstIterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRCurve::ConstIterator”的客户端使用
+          with
+          [
+              _Ty=OGRCurve::ConstIterator::Private
+          ]
+  f:\gdal\include\ogr_geometry.h(947): note: 参见“std::unique_ptr<OGRCurve::ConstIterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRCurve::ConstIterator::Private
+          ]
+f:\gdal\include\ogr_geometry.h(1066): warning C4251: “OGRSimpleCurve::Iterator::m_poPrivate”: class“std::unique_ptr<OGRSimpleCurve::Iterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRSimpleCurve::Iterator”的客户端使用
+          with
+          [
+              _Ty=OGRSimpleCurve::Iterator::Private
+          ]
+  f:\gdal\include\ogr_geometry.h(1066): note: 参见“std::unique_ptr<OGRSimpleCurve::Iterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRSimpleCurve::Iterator::Private
+          ]
+f:\gdal\include\ogr_geometry.h(1083): warning C4251: “OGRSimpleCurve::ConstIterator::m_poPrivate”: class“std::unique_ptr<OGRSimpleCurve::ConstIterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRSimpleCurve::ConstIterator”的客户端使用
+          with
+          [
+              _Ty=OGRSimpleCurve::ConstIterator::Private
+          ]
+  f:\gdal\include\ogr_geometry.h(1083): note: 参见“std::unique_ptr<OGRSimpleCurve::ConstIterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRSimpleCurve::ConstIterator::Private
+          ]
+f:\gdal\include\ogr_feature.h(384): warning C4251: “OGRFeature::FieldValue::m_poPrivate”: class“std::unique_ptr<OGRFeature::FieldValue::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRFeature::FieldValue”的客户端使用
+          with
+          [
+              _Ty=OGRFeature::FieldValue::Private
+          ]
+  f:\gdal\include\ogr_feature.h(384): note: 参见“std::unique_ptr<OGRFeature::FieldValue::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRFeature::FieldValue::Private
+          ]
+f:\gdal\include\ogr_feature.h(527): warning C4251: “OGRFeature::ConstFieldIterator::m_poPrivate”: class“std::unique_ptr<OGRFeature::ConstFieldIterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRFeature::ConstFieldIterator”的客户端使用
+          with
+          [
+              _Ty=OGRFeature::ConstFieldIterator::Private
+          ]
+  f:\gdal\include\ogr_feature.h(527): note: 参见“std::unique_ptr<OGRFeature::ConstFieldIterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRFeature::ConstFieldIterator::Private
+          ]
+f:\gdal\include\gdal_priv.h(137): warning C4251: “GDALMajorObject::sDescription”: class“CPLStringT<void>”需要有 dll 接口由 class“GDALMajorObject”的客户端使用
+  f:\gdal\include\cpl_string.h(323): note: 参见“CPLStringT<void>”的声明
+f:\gdal\include\gdal_priv.h(190): warning C4251: “GDALDefaultOverviews::osOvrFilename”: class“CPLStringT<void>”需要有 dll 接口由 class“GDALDefaultOverviews”的客户端使用
+  f:\gdal\include\cpl_string.h(323): note: 参见“CPLStringT<void>”的声明
+f:\gdal\include\gdal_priv.h(483): warning C4251: “GDALDataset::Bands::Iterator::m_poPrivate”: class“std::unique_ptr<GDALDataset::Bands::Iterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“GDALDataset::Bands::Iterator”的客户端使用
+          with
+          [
+              _Ty=GDALDataset::Bands::Iterator::Private
+          ]
+  f:\gdal\include\gdal_priv.h(483): note: 参见“std::unique_ptr<GDALDataset::Bands::Iterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=GDALDataset::Bands::Iterator::Private
+          ]
+f:\gdal\include\gdal_priv.h(670): warning C4251: “GDALDataset::Layers::Iterator::m_poPrivate”: class“std::unique_ptr<GDALDataset::Layers::Iterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“GDALDataset::Layers::Iterator”的客户端使用
+          with
+          [
+              _Ty=GDALDataset::Layers::Iterator::Private
+          ]
+  f:\gdal\include\gdal_priv.h(670): note: 参见“std::unique_ptr<GDALDataset::Layers::Iterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=GDALDataset::Layers::Iterator::Private
+          ]
+f:\gdal\include\gdal_priv.h(728): warning C4251: “GDALDataset::Features::Iterator::m_poPrivate”: class“std::unique_ptr<GDALDataset::Features::Iterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“GDALDataset::Features::Iterator”的客户端使用
+          with
+          [
+              _Ty=GDALDataset::Features::Iterator::Private
+          ]
+  f:\gdal\include\gdal_priv.h(728): note: 参见“std::unique_ptr<GDALDataset::Features::Iterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=GDALDataset::Features::Iterator::Private
+          ]
+f:\gdal\include\gdal_priv.h(953): warning C4251: “GDALColorTable::aoEntries”: class“std::vector<GDALColorEntry,std::allocator<_Ty>>”需要有 dll 接口由 class“GDALColorTable”的客户端使用
+          with
+          [
+              _Ty=GDALColorEntry
+          ]
+  f:\gdal\include\gdal_priv.h(953): note: 参见“std::vector<GDALColorEntry,std::allocator<_Ty>>”的声明
+          with
+          [
+              _Ty=GDALColorEntry
+          ]
+f:\gdal\include\gdal_priv.h(1513): warning C4251: “GDALDriverManager::oMapNameToDrivers”: class“std::map<CPLString,GDALDriver *,std::less<_Kty>,std::allocator<std::pair<const _Kty,_Ty>>>”需要有 dll 接口由 class“GDALDriverManager”的客户端使用
+          with
+          [
+              _Kty=CPLString,
+              _Ty=GDALDriver *
+          ]
+  f:\gdal\include\gdal_priv.h(1513): note: 参见“std::map<CPLString,GDALDriver *,std::less<_Kty>,std::allocator<std::pair<const _Kty,_Ty>>>”的声明
+          with
+          [
+              _Kty=CPLString,
+              _Ty=GDALDriver *
+          ]
+  f:\boost_1_74_0\boost\range\result_iterator.hpp(20): note: This header is deprecated. Use <boost/range/iterator.hpp> instead.
+  f:\boost_1_74_0\boost\range\const_reverse_iterator.hpp(20): note: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.
+  f:\boost_1_74_0\boost\range\reverse_result_iterator.hpp(20): note: This header is deprecated. Use <boost/range/reverse_iterator.hpp> instead.
+f:\boost_1_74_0\boost\geometry\formulas\area_formulas.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+f:\boost_1_74_0\boost\geometry\formulas\vertex_latitude.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+f:\boost_1_74_0\boost\geometry\strategies\geographic\area.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  f:\boost_1_74_0\boost\detail\no_exceptions_support.hpp(17): note: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.
+f:\gdal\include\ogrsf_frmts.h(74): warning C4251: “OGRLayer::m_poPrivate”: class“std::unique_ptr<OGRLayer::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRLayer”的客户端使用
+          with
+          [
+              _Ty=OGRLayer::Private
+          ]
+  f:\gdal\include\ogrsf_frmts.h(74): note: 参见“std::unique_ptr<OGRLayer::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRLayer::Private
+          ]
+f:\gdal\include\ogrsf_frmts.h(81): warning C4251: “OGRLayer::FeatureIterator::m_poPrivate”: class“std::unique_ptr<OGRLayer::FeatureIterator::Private,std::default_delete<_Ty>>”需要有 dll 接口由 class“OGRLayer::FeatureIterator”的客户端使用
+          with
+          [
+              _Ty=OGRLayer::FeatureIterator::Private
+          ]
+  f:\gdal\include\ogrsf_frmts.h(81): note: 参见“std::unique_ptr<OGRLayer::FeatureIterator::Private,std::default_delete<_Ty>>”的声明
+          with
+          [
+              _Ty=OGRLayer::FeatureIterator::Private
+          ]
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(221): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(230): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(239): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(249): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(259): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(301): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(318): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\utility.hpp(328): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(219): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(229): warning C4244: “参数”: 从“const _Ty”转换到“int”，可能丢失数据
+          with
+          [
+              _Ty=GIntBig
+          ]
+i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(255): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+  i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(472): note: 参见对正在编译的函数 模板 实例化“void ttts::strategy::travel_time::dijkstra_outer_memory<TPoint>(const std::string &,ttts::model::population_dataset *,ttts::model::speed_dataset *,std::vector<double,std::allocator<_Ty>> *,std::vector<GIntBig,std::allocator<__int64>> *,std::vector<GIntBig,std::allocator<__int64>> *)”的引用
+          with
+          [
+              TPoint=ttts::model::point_g,
+              _Ty=double
+          ]
+  i:\education\osm\code\github\msvc++ version\ttts\main.cpp(100): note: 参见对正在编译的函数 模板 实例化“void ttts::strategy::travel_time::solve<ttts::model::point_g>(std::string,ttts::model::population_dataset *,ttts::model::speed_dataset *,boost::unordered::unordered_map<__int64,std::pair<double,double>,boost::hash<boost::long_long_type>,std::equal_to<K>,std::allocator<std::pair<const K,T>>> *,boost::unordered::unordered_map<K,ttts::model::edge,boost::hash<boost::long_long_type>,std::equal_to<K>,std::allocator<std::pair<const K,ttts::model::edge>>> *,std::vector<double,std::allocator<_Ty>> *,bool)”的引用
+          with
+          [
+              K=__int64,
+              T=std::pair<double,double>,
+              _Ty=double
+          ]
+i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(317): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+i:\education\osm\code\github\msvc++ version\ttts\travel_time.hpp(322): warning C4244: “参数”: 从“const __int64”转换到“int”，可能丢失数据
+    正在创建库 I:\Education\OSM\code\GitHub\MSVC++ Version\TTTS\x64\Release\TTTS.lib 和对象 I:\Education\OSM\code\GitHub\MSVC++ Version\TTTS\x64\Release\TTTS.exp
+  正在生成代码
+  11 of 5043 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  TTTS.vcxproj -> I:\Education\OSM\code\GitHub\MSVC++ Version\TTTS\x64\Release\TTTS.exe
